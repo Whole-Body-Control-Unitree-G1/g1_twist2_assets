@@ -2,19 +2,23 @@
 """Build articulated Dex1-1 + D405 USDs from dex1_d405_hand/dex1_1_d405.urdf.
 
 Writes three files next to the URDF, all with identical geometry, frames and colliders:
-  dex1_1_d405.usd        standalone hand, plain URDF names (base_link, Joint1_1, ...), camera "D405"
-  dex1_1_d405_right.usd  names prefixed "right_hand_", camera "right_D405"  (referenced by the G1)
-  dex1_1_d405_left.usd   names prefixed "left_hand_",  camera "left_D405"   (referenced by the G1)
+  dex1_1_d405.usd        standalone hand, plain URDF names (hand_palm_link, dex1_finger_joint_1, ...), camera "D405"
+  dex1_1_d405_right.usd  names prefixed "right_", camera "right_D405"  (referenced by the G1)
+  dex1_1_d405_left.usd   names prefixed "left_",  camera "left_D405"   (referenced by the G1)
+Link and joint names follow MagicSim's g1_dex1 (e.g. right_hand_palm_link, right_dex1_finger1_3_link,
+right_dex1_finger_joint_1); the D405 links are <side>_hand_d405_{mount,camera}_link.
 
 Layout: one rigid body per URDF link, as in the URDF and the G1 (g1_assembled/ references link contents 1:1):
   /<root>                        ArticulationRoot, self-collision off, fixed to the world
-    /<p>base_link, /<p>d405_mount, /<p>d405_camera, /<p>Link1_1 ... /<p>Link2_3
+    /<p>hand_palm_link, /<p>hand_d405_mount_link, /<p>hand_d405_camera_link,
+    /<p>dex1_finger1_1_link ... /<p>dex1_finger2_3_link
                                  rigid bodies with visuals/<link>/mesh and collisions/<link>/mesh
-      /<p>d405_camera/<cam>      Camera at the URDF d405_optical_frame
-    /joints                      <p>Joint1_1, <p>Joint2_1 (prismatic), fixed joints (incl. base_to_d405_mount,
-                                 d405_mount_to_camera), root_joint
+      /<p>hand_d405_camera_link/<cam>
+                                 Camera at the URDF hand_d405_optical_frame
+    /joints                      <p>dex1_finger_joint_1, <p>dex1_finger_joint_2 (prismatic), fixed joints
+                                 (incl. hand_d405_mount_joint, hand_d405_camera_joint), root_joint
 Colliders are built from the visual meshes: convex decomposition for the base, mount and finger
-bodies (a single hull of Link*_2 would cover the pad face), convex hulls for the rest.
+bodies (a single hull of dex1_finger*_2_link would cover the pad face), convex hulls for the rest.
 Everything is black like the real gripper; the pads get a matte rubber OmniPBR material with the
 1 mm diamond-knurl normal map (textures/pad_knurl_normal.png, made by tools/make_pad_knurl_texture.py)
 on planar UVs over the gripping face.
@@ -32,15 +36,18 @@ from pxr import Gf, Sdf, Usd, UsdGeom, UsdPhysics, UsdShade, Vt
 from scipy.spatial.transform import Rotation as R
 
 HAND_DIR = Path(__file__).resolve().parent.parent / "dex1_d405_hand"
-OPTICAL_FRAME = "d405_optical_frame"  # frame only (no geometry): the camera prim goes under d405_camera
-DECOMPOSE = {"base_link", "d405_mount", "Link1_2", "Link2_2"}
+BASE_LINK = "hand_palm_link"           # the Dex1-1 base (URDF root)
+CAMERA_LINK = "hand_d405_camera_link"
+OPTICAL_FRAME = "hand_d405_optical_frame"  # frame only (no geometry): the camera prim goes under CAMERA_LINK
+FINGER_JOINTS = ("dex1_finger_joint_1", "dex1_finger_joint_2")  # prismatic; the second mimics the first
+DECOMPOSE = {BASE_LINK, "hand_d405_mount_link", "dex1_finger1_2_link", "dex1_finger2_2_link"}
 # Materials (OmniPBR), set from a real D405 frame of the gripper: pads and fingers both render at
 # ~0.2x the (sRGB) pixel value of a light-grey floor = ~0.04x in linear light, so ~0.018 albedo for a
 # ~0.45 floor; only soft edge highlights (no metal reflections).
 # The G1 binds its hand meshes to these materials (referenced as <side>_hand_Looks).
 BODY_COLOR = PAD_COLOR = (0.018, 0.018, 0.018)   # black anodised aluminium / black rubber (linear albedo)
 BODY_METALLIC, BODY_ROUGHNESS = 0.0, 0.65      # anodising reads as a satin dielectric, not bare metal
-PAD_LINKS = {"Link1_3", "Link2_3"}
+PAD_LINKS = {"dex1_finger1_3_link", "dex1_finger2_3_link"}
 # Pads: matte black rubber with a 1 mm diamond knurl (normal map from tools/make_pad_knurl_texture.py).
 # The pad UVs are the gripping-face plane (link y, z) divided by one texture tile.
 PAD_NORMAL_MAP = "./textures/pad_knurl_normal.png"   # relative to dex1_d405_hand/
@@ -101,7 +108,7 @@ def matrix(M):
 
 
 def build(links, joints, mesh_root, out, prefix, cam_name, root_name, mimic):
-    pose = {"base_link": np.eye(4)}  # link poses in base_link at q = 0
+    pose = {BASE_LINK: np.eye(4)}  # link poses in the base link at q = 0
     pending = dict(joints)
     while pending:
         for n, j in list(pending.items()):
@@ -176,11 +183,11 @@ def build(links, joints, mesh_root, out, prefix, cam_name, root_name, mimic):
         approx = "convexDecomposition" if link in DECOMPOSE else "convexHull"
         mesh(f"{path}/visuals/{link}/mesh", links[link]["visual"], color=color, pad=link in PAD_LINKS)
         mesh(f"{path}/collisions/{link}/mesh", links[link]["visual"], collider=approx)
-    base = f"{root}/{prefix}base_link"
+    base = f"{root}/{prefix}{BASE_LINK}"
 
-    # D405: ROS optical frame (+Z forward, +Y down) -> USD camera (looks down -Z, +Y up), on the d405_camera link
-    cam = UsdGeom.Camera.Define(stage, f"{root}/{prefix}d405_camera/{cam_name}")
-    cam.AddTransformOp().Set(matrix(np.linalg.inv(pose["d405_camera"]) @ pose[OPTICAL_FRAME] @ np.diag([1, -1, -1, 1])))
+    # D405: ROS optical frame (+Z forward, +Y down) -> USD camera (looks down -Z, +Y up), on the camera link
+    cam = UsdGeom.Camera.Define(stage, f"{root}/{prefix}{CAMERA_LINK}/{cam_name}")
+    cam.AddTransformOp().Set(matrix(np.linalg.inv(pose[CAMERA_LINK]) @ pose[OPTICAL_FRAME] @ np.diag([1, -1, -1, 1])))
     c = CAMERA
     cam.CreateFocalLengthAttr(c["focal_length"])
     cam.CreateHorizontalApertureAttr(c["width"] * c["focal_length"] / c["fx"])
@@ -225,10 +232,10 @@ def build(links, joints, mesh_root, out, prefix, cam_name, root_name, mimic):
             d.CreateMaxForceAttr(DRIVE["max_force"])
             d.CreateTargetPositionAttr(0.0)
 
-    if mimic:  # single-motor gripper: Joint2_1 follows Joint1_1 (PhysX: q + gearing * q_ref + offset = 0)
-        m = stage.GetPrimAtPath(f"{root}/joints/{prefix}Joint2_1")
+    if mimic:  # single-motor gripper: finger joint 2 follows joint 1 (PhysX: q + gearing * q_ref + offset = 0)
+        m = stage.GetPrimAtPath(f"{root}/joints/{prefix}{FINGER_JOINTS[1]}")
         m.AddAppliedSchema("PhysxMimicJointAPI:transX")
-        m.CreateRelationship("physxMimicJoint:transX:referenceJoint").SetTargets([f"{root}/joints/{prefix}Joint1_1"])
+        m.CreateRelationship("physxMimicJoint:transX:referenceJoint").SetTargets([f"{root}/joints/{prefix}{FINGER_JOINTS[0]}"])
         m.CreateAttribute("physxMimicJoint:transX:referenceJointAxis", Sdf.ValueTypeNames.Token).Set("transX")
         m.CreateAttribute("physxMimicJoint:transX:gearing", Sdf.ValueTypeNames.Float).Set(-1.0)
         m.CreateAttribute("physxMimicJoint:transX:offset", Sdf.ValueTypeNames.Float).Set(0.0)
@@ -240,10 +247,10 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--urdf", type=Path, default=HAND_DIR / "dex1_1_d405.urdf")
     ap.add_argument("--out-dir", type=Path, default=HAND_DIR)
-    ap.add_argument("--no-mimic", action="store_true", help="Leave Joint2_1 independent of Joint1_1.")
+    ap.add_argument("--no-mimic", action="store_true", help="Leave finger joint 2 independent of joint 1.")
     a = ap.parse_args()
     links, joints = parse_urdf(a.urdf)
-    for suffix, prefix, cam in (("", "", "D405"), ("_right", "right_hand_", "right_D405"), ("_left", "left_hand_", "left_D405")):
+    for suffix, prefix, cam in (("", "", "D405"), ("_right", "right_", "right_D405"), ("_left", "left_", "left_D405")):
         out = a.out_dir / f"dex1_1_d405{suffix}.usd"
         out.unlink(missing_ok=True)
         build(links, joints, a.urdf.parent, out, prefix, cam, f"dex1_1_d405{suffix}", not a.no_mimic)

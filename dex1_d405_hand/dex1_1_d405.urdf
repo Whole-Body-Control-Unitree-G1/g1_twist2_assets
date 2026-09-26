@@ -1,86 +1,86 @@
 <?xml version="1.0"?>
 <robot name="dex1_1_d405">
   <!-- Dex1_1 gripper with the OFFICIAL RealSense D405 mount (M5010).
-       base_link uses base_link_nocam.STL (built-in USB-cam bracket removed).
+       hand_palm_link (the Dex1-1 base) uses base_link_nocam.STL (built-in USB-cam bracket removed).
        The mount clasps the same Ø45 wrist boss the USB-cam mount used;
-       d405_optical_frame is a ROS optical frame (+Z fwd, +X right, +Y down)
+       hand_d405_optical_frame is a ROS optical frame (+Z fwd, +X right, +Y down)
        aimed at the grasp. Meshes in meters. -->
-  <link name="base_link">
+  <link name="hand_palm_link">
     <inertial><origin xyz="0.0001178 0.036886 0.0080974"/><mass value="0.11"/>
       <inertia ixx="4.9533E-05" ixy="5.9474E-08" ixz="-3.1979E-08" iyy="6.8944E-05" iyz="-1.7064E-06" izz="3.4443E-05"/></inertial>
     <visual><geometry><mesh filename="meshes/base_link_nocam.STL"/></geometry>
       <material name="body"><color rgba="0.79 0.82 0.93 1"/></material></visual>
     <collision><geometry><mesh filename="meshes/base_link_nocam.STL"/></geometry></collision>
   </link>
-  <link name="Link1_1">
+  <link name="dex1_finger1_1_link">
     <inertial><mass value="0.01"/><inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/></inertial>
     <visual><geometry><mesh filename="meshes/Link1_1.STL"/></geometry><material name="Link1_1m"><color rgba="0.79 0.82 0.93 1"/></material></visual>
     <collision><geometry><mesh filename="meshes/Link1_1.STL"/></geometry></collision>
   </link>
-  <link name="Link1_2">
+  <link name="dex1_finger1_2_link">
     <inertial><mass value="0.01"/><inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/></inertial>
     <visual><geometry><mesh filename="meshes/Link1_2.STL"/></geometry><material name="Link1_2m"><color rgba="0.90 0.92 0.93 1"/></material></visual>
     <collision><geometry><mesh filename="meshes/Link1_2.STL"/></geometry></collision>
   </link>
-  <link name="Link1_3">
+  <link name="dex1_finger1_3_link">
     <inertial><mass value="0.01"/><inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/></inertial>
     <visual><geometry><mesh filename="meshes/Link1_3.STL"/></geometry><material name="Link1_3m"><color rgba="0.30 0.30 0.30 1"/></material></visual>
     <collision><geometry><mesh filename="meshes/Link1_3.STL"/></geometry></collision>
   </link>
-  <link name="Link2_1">
+  <link name="dex1_finger2_1_link">
     <inertial><mass value="0.01"/><inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/></inertial>
     <visual><geometry><mesh filename="meshes/Link2_1.STL"/></geometry><material name="Link2_1m"><color rgba="0.79 0.82 0.93 1"/></material></visual>
     <collision><geometry><mesh filename="meshes/Link2_1.STL"/></geometry></collision>
   </link>
-  <link name="Link2_2">
+  <link name="dex1_finger2_2_link">
     <inertial><mass value="0.01"/><inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/></inertial>
     <visual><geometry><mesh filename="meshes/Link2_2.STL"/></geometry><material name="Link2_2m"><color rgba="0.90 0.92 0.93 1"/></material></visual>
     <collision><geometry><mesh filename="meshes/Link2_2.STL"/></geometry></collision>
   </link>
-  <link name="Link2_3">
+  <link name="dex1_finger2_3_link">
     <inertial><mass value="0.01"/><inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/></inertial>
     <visual><geometry><mesh filename="meshes/Link2_3.STL"/></geometry><material name="Link2_3m"><color rgba="0.30 0.30 0.30 1"/></material></visual>
     <collision><geometry><mesh filename="meshes/Link2_3.STL"/></geometry></collision>
   </link>
-  <joint name="Joint1_1" type="prismatic"><origin xyz="0.04055 0.0593 0.0152"/><parent link="base_link"/><child link="Link1_1"/><axis xyz="-1 0 0"/><limit lower="-0.02" upper="0.0245" effort="20" velocity="0.2"/></joint>
-  <joint name="Joint1_2" type="fixed"><origin xyz="-0.013 0.013 0"/><parent link="Link1_1"/><child link="Link1_2"/><axis xyz="0 0 0"/></joint>
-  <joint name="Joint1_3" type="fixed"><origin xyz="-0.0025165 0.025043 -0.001"/><parent link="Link1_2"/><child link="Link1_3"/><axis xyz="0 0 0"/></joint>
-  <joint name="Joint2_1" type="prismatic"><origin xyz="-0.04055 0.0593 -0.0152"/><parent link="base_link"/><child link="Link2_1"/><axis xyz="1 0 0"/><limit lower="-0.02" upper="0.0245" effort="20" velocity="0.2"/></joint>
-  <joint name="Joint2_2" type="fixed"><origin xyz="0.013 0.013 0"/><parent link="Link2_1"/><child link="Link2_2"/><axis xyz="0 0 0"/></joint>
-  <joint name="Joint2_3" type="fixed"><origin xyz="0.0025165 0.025043 0.0294"/><parent link="Link2_2"/><child link="Link2_3"/><axis xyz="0 0 0"/></joint>
-  <link name="d405_mount">
+  <joint name="dex1_finger_joint_1" type="prismatic"><origin xyz="0.04055 0.0593 0.0152"/><parent link="hand_palm_link"/><child link="dex1_finger1_1_link"/><axis xyz="-1 0 0"/><limit lower="-0.02" upper="0.0245" effort="20" velocity="0.2"/></joint>
+  <joint name="dex1_finger1_2_joint" type="fixed"><origin xyz="-0.013 0.013 0"/><parent link="dex1_finger1_1_link"/><child link="dex1_finger1_2_link"/><axis xyz="0 0 0"/></joint>
+  <joint name="dex1_finger1_3_joint" type="fixed"><origin xyz="-0.0025165 0.025043 -0.001"/><parent link="dex1_finger1_2_link"/><child link="dex1_finger1_3_link"/><axis xyz="0 0 0"/></joint>
+  <joint name="dex1_finger_joint_2" type="prismatic"><origin xyz="-0.04055 0.0593 -0.0152"/><parent link="hand_palm_link"/><child link="dex1_finger2_1_link"/><axis xyz="1 0 0"/><limit lower="-0.02" upper="0.0245" effort="20" velocity="0.2"/></joint>
+  <joint name="dex1_finger2_2_joint" type="fixed"><origin xyz="0.013 0.013 0"/><parent link="dex1_finger2_1_link"/><child link="dex1_finger2_2_link"/><axis xyz="0 0 0"/></joint>
+  <joint name="dex1_finger2_3_joint" type="fixed"><origin xyz="0.0025165 0.025043 0.0294"/><parent link="dex1_finger2_2_link"/><child link="dex1_finger2_3_link"/><axis xyz="0 0 0"/></joint>
+  <link name="hand_d405_mount_link">
     <inertial><origin xyz="0.0006 0.0268 0.0031"/><mass value="0.037"/>
       <inertia ixx="5.01e-05" ixy="7.2e-07" ixz="6.9e-08" iyy="1.44e-05" iyz="-6.19e-06" izz="6.06e-05"/></inertial>
     <visual><geometry><mesh filename="meshes/d405_mount.STL"/></geometry><material name="mnt"><color rgba="0.55 0.58 0.62 1"/></material></visual>
     <collision><geometry><mesh filename="meshes/d405_mount_collision.STL"/></geometry></collision>
   </link>
-  <joint name="base_to_d405_mount" type="fixed">
+  <joint name="hand_d405_mount_joint" type="fixed">
     <origin xyz="-0.000100 0.033000 -0.001900" rpy="1.570796 0.000000 3.141593"/>
-    <parent link="base_link"/><child link="d405_mount"/>
+    <parent link="hand_palm_link"/><child link="hand_d405_mount_link"/>
   </joint>
-  <link name="d405_camera">
+  <link name="hand_d405_camera_link">
     <inertial><origin xyz="0 0 -0.011"/><mass value="0.045"/>
       <inertia ixx="1.2e-05" ixy="0" ixz="0" iyy="1.2e-05" iyz="0" izz="1.3e-05"/></inertial>
     <visual><geometry><mesh filename="meshes/d405.STL"/></geometry>
       <material name="d405black"><color rgba="0.12 0.12 0.14 1"/></material></visual>
     <collision><geometry><mesh filename="meshes/d405.STL"/></geometry></collision>
   </link>
-  <joint name="d405_mount_to_camera" type="fixed">
+  <joint name="hand_d405_camera_joint" type="fixed">
     <origin xyz="0.000000 0.058370 0.029108" rpy="0.523611 0.000000 0.000000"/>
-    <parent link="d405_mount"/><child link="d405_camera"/>
+    <parent link="hand_d405_mount_link"/><child link="hand_d405_camera_link"/>
   </joint>
   <!-- Optical frame at the D405 lens: ROS convention +Z fwd, +X right, +Y down -->
-  <link name="d405_optical_frame"/>
-  <joint name="d405_mount_to_optical" type="fixed">
+  <link name="hand_d405_optical_frame"/>
+  <joint name="hand_d405_optical_joint" type="fixed">
     <!-- rolled 180 deg about the optical axis (was rpy 0.523611 0 0) so image up/right match the
          real D405 colour stream from realsense2_camera -->
     <origin xyz="0.000000 0.058370 0.029108" rpy="-0.523611 0.000000 3.141593"/>
-    <parent link="d405_mount"/><child link="d405_optical_frame"/>
+    <parent link="hand_d405_mount_link"/><child link="hand_d405_optical_frame"/>
   </joint>
   <!-- Intel RealSense D405 colour stream, calibration of our unit (realsense2_camera color/camera_info):
        848x480, fx 429.97, fy 429.45, cx 413.72, cy 243.44 px, plumb_bob D = [-0.05568, 0.05787, 0.00057,
        0.00049, -0.01881]; HFOV 89.2 deg (=1.5568 rad), VFOV 58.4 deg; range ~0.07-0.5 m (clip padded). -->
-  <gazebo reference="d405_optical_frame">
+  <gazebo reference="hand_d405_optical_frame">
     <sensor name="d405_depth" type="depth">
       <always_on>1</always_on><update_rate>30</update_rate>
       <camera>

@@ -1,5 +1,5 @@
 collision_spheres:
-  base_link:  # usd, 22 spheres
+  hand_palm_link:  # usd, 22 spheres
     - "center": [-0.0186, 0.0106, 0.0235]
       "radius": 0.0130
     - "center": [0.0237, 0.0124, 0.0064]
@@ -44,7 +44,7 @@ collision_spheres:
       "radius": 0.0130
     - "center": [0.0175, 0.0124, 0.0232]
       "radius": 0.0130
-  d405_mount:  # usd, 30 spheres
+  hand_d405_mount_link:  # usd, 30 spheres
     - "center": [-0.0121, 0.0457, 0.0083]
       "radius": 0.0160
     - "center": [0.0152, 0.0591, 0.0140]
@@ -105,7 +105,7 @@ collision_spheres:
       "radius": 0.0130
     - "center": [0.0049, 0.0176, 0.0055]
       "radius": 0.0100
-  d405_camera:  # usd, 4 spheres
+  hand_d405_camera_link:  # usd, 4 spheres
     - "center": [0.0093, 0.0102, -0.0116]
       "radius": 0.0130
     - "center": [-0.0108, -0.0088, -0.0111]
@@ -114,7 +114,7 @@ collision_spheres:
       "radius": 0.0130
     - "center": [-0.0092, 0.0103, -0.0115]
       "radius": 0.0130
-  Link1_1:  # usd, 10 spheres
+  dex1_finger1_1_link:  # usd, 10 spheres
     - "center": [-0.0223, 0.0037, -0.0031]
       "radius": 0.0043
     - "center": [-0.0112, 0.0032, -0.0038]
@@ -135,7 +135,7 @@ collision_spheres:
       "radius": 0.0030
     - "center": [-0.0770, -0.0008, -0.0048]
       "radius": 0.0030
-  Link1_2:  # usd, 31 spheres
+  dex1_finger1_2_link:  # usd, 31 spheres
     - "center": [0.0098, 0.0035, -0.0154]
       "radius": 0.0060
     - "center": [0.0080, 0.0467, -0.0105]
@@ -198,7 +198,7 @@ collision_spheres:
       "radius": 0.0030
     - "center": [-0.0001, 0.0617, -0.0128]
       "radius": 0.0030
-  Link1_3:  # usd, 7 spheres
+  dex1_finger1_3_link:  # usd, 7 spheres
     - "center": [0.0050, 0.0228, -0.0142]
       "radius": 0.0050
     - "center": [0.0060, 0.0040, -0.0065]
@@ -213,7 +213,7 @@ collision_spheres:
       "radius": 0.0060
     - "center": [0.0060, 0.0415, -0.0187]
       "radius": 0.0060
-  Link2_1:  # usd, 10 spheres
+  dex1_finger2_1_link:  # usd, 10 spheres
     - "center": [0.0223, 0.0037, 0.0031]
       "radius": 0.0043
     - "center": [0.0112, 0.0032, 0.0038]
@@ -234,7 +234,7 @@ collision_spheres:
       "radius": 0.0030
     - "center": [0.0770, -0.0008, 0.0048]
       "radius": 0.0030
-  Link2_2:  # usd, 31 spheres
+  dex1_finger2_2_link:  # usd, 31 spheres
     - "center": [-0.0098, 0.0035, 0.0154]
       "radius": 0.0060
     - "center": [-0.0080, 0.0467, 0.0105]
@@ -297,7 +297,7 @@ collision_spheres:
       "radius": 0.0030
     - "center": [0.0009, 0.0594, 0.0187]
       "radius": 0.0030
-  Link2_3:  # usd, 7 spheres
+  dex1_finger2_3_link:  # usd, 7 spheres
     - "center": [-0.0050, 0.0228, -0.0142]
       "radius": 0.0050
     - "center": [-0.0060, 0.0040, -0.0065]

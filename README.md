@@ -13,32 +13,36 @@ and Dex1_1 grippers carrying RealSense D405 cameras. Meters, Z-up.
     merged into the single robot articulation.
   - Everything is one articulation (root `root_joint`). Meshes are inline except:
     - the head, which references `./twist2_head.usda`;
-    - the hand geometry (`<side>_hand_*/visuals`, `collisions`, `<side>_D405`) and its materials
+    - the hand geometry (`visuals`, `collisions` and `<side>_D405` of the hand links) and its materials
       (`<side>_hand_Looks`), which reference `../dex1_d405_hand/dex1_1_d405_{right,left}.usd`.
-    Keep the folders together. Hand link prims, joints, drives and masses stay in the G1 file,
-    so prim paths and joint names are the same as before.
+    Keep the folders together. Hand link prims, joints, drives and masses stay in the G1 file.
+  - Hand names follow MagicSim's `g1_dex1`: links `<side>_hand_palm_link` (the Dex1-1 base),
+    `<side>_dex1_finger{1,2}_{1,2,3}_link` (`_3` = pad), `<side>_hand_d405_mount_link`,
+    `<side>_hand_d405_camera_link`; prismatic joints `<side>_dex1_finger_joint_{1,2}`; fixed joints
+    `<side>_hand_palm_joint` (to `<side>_wrist_yaw_link`), `<side>_dex1_finger{1,2}_{2,3}_joint`,
+    `<side>_hand_d405_{mount,camera}_joint`.
 - `twist2_head.usda` — the head, referenced by the G1 (also opens standalone).
 - `config.yaml`, `configuration/` — original Unitree asset config.
 
 **Head joints to drive:** `joint_yaw` (yaw, centered 23°), `joint_pitch_motor` (pitch, −30°…+90°).
 Gears `gear_yaw` / `gear_pitch` couple the rest.
 
-**D405 cameras:** `<root>/<side>_hand_base_link/<side>_D405`, and per-hand optical frames.
+**D405 cameras:** `<root>/<side>_hand_d405_camera_link/<side>_D405`, and per-hand optical frames.
 Intrinsics: our unit's calibrated colour stream, 848×480, fx 429.97 / fy 429.45, cx 413.72 / cy 243.44 px,
 plumb_bob distortion (HFOV 89.2° / VFOV 58.4°), authored as Isaac Sim's OpenCV pinhole lens model on the camera prims.
 
 ### `dex1_d405_hand/` — Dex1_1 hand with the D405 mount (single source for the hand)
 - `dex1_1_d405.urdf` (+ `meshes/`) — the source of truth for ROS, planners and the USDs below.
-- `dex1_1_d405.usd` — articulated standalone hand, URDF names (`base_link`, `Joint1_1`, …),
-  camera `base_link/D405`, fixed to the world.
-- `dex1_1_d405_right.usd`, `dex1_1_d405_left.usd` — the same hand with `right_hand_` / `left_hand_`
-  names and `<side>_D405` cameras; the G1 references their geometry.
-- All three have the same frames as the URDF and the G1. `Joint1_1`/`Joint2_1` are prismatic (−0.02…0.0245 m,
-  + closes) and `Joint2_1` mimics `Joint1_1` (single motor). The D405 mount and camera are merged into
-  `base_link` as geometry. Colliders come from the visual meshes: convex decomposition for the base,
-  mount and finger bodies (`Link*_2`), convex hulls for the rest.
+- `dex1_1_d405.usd` — articulated standalone hand, URDF names (`hand_palm_link`, `dex1_finger_joint_1`, …),
+  camera `hand_d405_camera_link/D405`, fixed to the world.
+- `dex1_1_d405_right.usd`, `dex1_1_d405_left.usd` — the same hand with `right_` / `left_`
+  names (e.g. `right_hand_palm_link`) and `<side>_D405` cameras; the G1 references their geometry.
+- All three have the same frames as the URDF and the G1. `dex1_finger_joint_1`/`_2` are prismatic
+  (−0.02…0.0245 m, + closes) and joint 2 mimics joint 1 (single motor). The D405 mount and camera are
+  their own links on fixed joints. Colliders come from the visual meshes: convex decomposition for the
+  base, mount and finger bodies (`dex1_finger*_2_link`), convex hulls for the rest.
 - `dex1_1_d405_spheres.yml` — collision spheres for cuRobo/BODex, per URDF link in link frames
-  (152 spheres; sphere 0 of `Link1_3`/`Link2_3` is the pad-face contact point).
+  (152 spheres; sphere 0 of `dex1_finger1_3_link`/`dex1_finger2_3_link` is the pad-face contact point).
 - Built from the official `Dex1_1_Realsense_D405_Camera_Mount_M5010` mount.
 
 ### `tools/` — regenerate the hand assets (needs `usd-core trimesh numpy scipy pyyaml`)
@@ -65,5 +69,4 @@ After editing the URDF: run `build_dex1_1_usd.py`; the G1 picks the change up th
   hole via the 4 corner screws, ~4 mm residual). Refine with a camera calibration and update
   the transform on the `twist2_head` reference prim in the G1 USD.
 - cuRobo spheres for the G1's hands: take `dex1_d405_hand/dex1_1_d405_spheres.yml` and prefix the
-  link names with `left_hand_` / `right_hand_`. `d405_mount`/`d405_camera` spheres are in those links'
-  URDF frames; express them in `<side>_hand_base_link` if the G1 URDF has no such links.
+  link names with `left_` / `right_` (they then match the G1's link names).

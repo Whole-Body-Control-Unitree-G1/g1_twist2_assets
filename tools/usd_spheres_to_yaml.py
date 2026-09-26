@@ -16,11 +16,16 @@ ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDe
 ap.add_argument("usd"); ap.add_argument("out"); ap.add_argument("--fallback")
 ap.add_argument("--root", default="/dex1_1_d405")
 a = ap.parse_args()
-ORDER = ["base_link", "d405_mount", "d405_camera", "Link1_1", "Link1_2", "Link1_3", "Link2_1", "Link2_2", "Link2_3"]
+ORDER = ["hand_palm_link", "hand_d405_mount_link", "hand_d405_camera_link", "dex1_finger1_1_link", "dex1_finger1_2_link",
+         "dex1_finger1_3_link", "dex1_finger2_1_link", "dex1_finger2_2_link", "dex1_finger2_3_link"]
+# Sphere-editing files made before the links were renamed: old group name -> link
+LEGACY = {"base_link": "hand_palm_link", "d405_mount": "hand_d405_mount_link", "d405_camera": "hand_d405_camera_link",
+          **{f"Link{f}_{i}": f"dex1_finger{f}_{i}_link" for f in (1, 2) for i in (1, 2, 3)}}
 fallback = yaml.safe_load(open(a.fallback))["collision_spheres"] if a.fallback else {}
 st = Usd.Stage.Open(a.usd); xc = UsdGeom.XformCache(0)
 world = lambda p: np.array(xc.GetLocalToWorldTransform(p)).T
 groups = {p.GetName()[len("spheres_"):]: p for p in st.Traverse() if p.GetName().startswith("spheres_")}
+groups = {LEGACY.get(k, k): p for k, p in groups.items()}
 
 
 def spheres_under(prim, frame, skip_groups):
