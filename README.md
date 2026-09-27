@@ -42,7 +42,7 @@ plumb_bob distortion (HFOV 89.2° / VFOV 58.4°), authored as Isaac Sim's OpenCV
   their own links on fixed joints. Colliders come from the visual meshes: convex decomposition for the
   base, mount and finger bodies (`dex1_finger*_2_link`), convex hulls for the rest.
 - `dex1_1_d405_spheres.yml` — collision spheres for cuRobo/BODex, per URDF link in link frames
-  (152 spheres; sphere 0 of `dex1_finger1_3_link`/`dex1_finger2_3_link` is the pad-face contact point).
+  (61 spheres, thinned for cuRobo planning).
 - Built from the official `Dex1_1_Realsense_D405_Camera_Mount_M5010` mount.
 
 ### `tools/` — regenerate the hand assets (needs `usd-core trimesh numpy scipy pyyaml`)
