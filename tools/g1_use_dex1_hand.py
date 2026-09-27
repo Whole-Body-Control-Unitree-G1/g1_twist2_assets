@@ -16,6 +16,7 @@ Rebuild the hand files first with tools/build_dex1_1_usd.py.
 Usage: python tools/g1_use_dex1_hand.py [--g1 g1_assembled/g1_29dof_with_dex1_base_fix1.usd]
 """
 import argparse
+import math
 from pathlib import Path
 
 import numpy as np
@@ -31,6 +32,11 @@ NEW_LINKS = {"hand_d405_mount_link": "hand_d405_mount_joint", "hand_d405_camera_
 CAMERA_LINK = "hand_d405_camera_link"
 BODY_MATERIAL, PAD_MATERIAL = "body_anodised", "pad_rubber"  # materials in the hand file's Looks
 PAD_LINKS = {"dex1_finger1_3_link", "dex1_finger2_3_link"}
+# <side>_hand_palm_joint: the hand mount on <side>_wrist_yaw_link. Position as in Unitree's G1 URDF
+# (the Dex3 palm mount); the Dex1-1 base is turned -90 deg about z so its +Y approach axis points
+# along the wrist's +X.
+PALM_MOUNT_XYZ = {"right": (0.0415, -0.0029912, -0.0000025), "left": (0.0415, 0.0029912, -0.0000025)}
+PALM_MOUNT_YAW = -math.pi / 2
 # Older G1 hand names: <side>_hand_<old> -> <side>_<new> (links under ROOT, joints under ROOT/joints)
 LEGACY_LINKS = {
     "base_link": BASE_LINK, "Link1_1": "dex1_finger1_1_link", "Link1_2": "dex1_finger1_2_link",
@@ -51,6 +57,8 @@ def main():
     layer = Sdf.Layer.FindOrOpen(str(a.g1))
     rename_legacy_hand_prims(layer)
     g1 = Usd.Stage.Open(layer)
+    for side in ("right", "left"):
+        mount_hand_on_wrist(g1, side)
 
     for side in ("right", "left"):
         hand_file = REPO / "dex1_d405_hand" / f"dex1_1_d405_{side}.usd"
@@ -126,6 +134,32 @@ def add_fixed_link(layer, hand, hand_root, side, link, joint, base_local):
     for attr, typ in (("physics:localPos0", Sdf.ValueTypeNames.Point3f), ("physics:localRot0", Sdf.ValueTypeNames.Quatf),
                       ("physics:localPos1", Sdf.ValueTypeNames.Point3f), ("physics:localRot1", Sdf.ValueTypeNames.Quatf)):
         Sdf.AttributeSpec(js, attr, typ).default = hj.GetPrim().GetAttribute(attr).Get()
+
+
+def mount_hand_on_wrist(stage, side):
+    """Set <side>_hand_palm_joint to PALM_MOUNT_* and place the palm and every hand body to match,
+    keeping their poses relative to the palm (hand bodies are direct children of ROOT)."""
+    xf = lambda name: np.array(UsdGeom.Xformable(stage.GetPrimAtPath(f"{ROOT}/{side}_{name}")).GetLocalTransformation()).T
+    mount = np.eye(4)
+    mount[:3, :3] = [[math.cos(PALM_MOUNT_YAW), -math.sin(PALM_MOUNT_YAW), 0], [math.sin(PALM_MOUNT_YAW), math.cos(PALM_MOUNT_YAW), 0], [0, 0, 1]]
+    mount[:3, 3] = PALM_MOUNT_XYZ[side]
+    old_palm, new_palm = xf(BASE_LINK), xf("wrist_yaw_link") @ mount
+    for link in LINKS:
+        prim = stage.GetPrimAtPath(f"{ROOT}/{side}_{link}")
+        if not prim:
+            continue  # mount / camera links are created later, from the palm pose
+        pose = new_palm @ np.linalg.inv(old_palm) @ xf(link)
+        for op in UsdGeom.Xformable(prim).GetOrderedXformOps():
+            if op.GetOpType() == UsdGeom.XformOp.TypeTranslate:
+                op.Set(Gf.Vec3d(*map(float, pose[:3, 3])))
+            elif op.GetOpType() == UsdGeom.XformOp.TypeOrient:
+                q = Gf.Matrix4d(pose.T.tolist()).ExtractRotationQuat()
+                op.Set(type(op.Get())(q.GetReal(), *q.GetImaginary()))
+    joint = UsdPhysics.Joint(stage.GetPrimAtPath(f"{ROOT}/joints/{side}_hand_palm_joint"))
+    joint.GetLocalPos0Attr().Set(Gf.Vec3f(*PALM_MOUNT_XYZ[side]))
+    joint.GetLocalRot0Attr().Set(Gf.Quatf(math.cos(PALM_MOUNT_YAW / 2), 0, 0, math.sin(PALM_MOUNT_YAW / 2)))
+    joint.GetLocalPos1Attr().Set(Gf.Vec3f(0, 0, 0))
+    joint.GetLocalRot1Attr().Set(Gf.Quatf(1, 0, 0, 0))
 
 
 def rename_legacy_hand_prims(layer):
